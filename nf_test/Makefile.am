@@ -13,9 +13,9 @@ AM_FCFLAGS += $(FCFLAGS_f90) @MOD_FLAG@$(top_builddir)/fortran
 AM_FFLAGS = ${AM_FCFLAGS}
 
 # All tests need to link to fortran and C libraries.
-LDADD = ${top_builddir}/fortran/libnetcdff.la 
+LDADD = ${top_builddir}/fortran/libnetcdff.la
 
-# nf_test is the main test program. 
+# nf_test is the main test program.
 check_PROGRAMS = nf_test
 TESTS = nf_test
 
@@ -45,9 +45,11 @@ if USE_NETCDF4
 
 # Add these netCDF-4 test programs.
 check_PROGRAMS += ftst_vars ftst_vars2 ftst_vars3 ftst_vars4 ftst_vars5	\
-                  ftst_vars6 ftst_types ftst_types2 ftst_types3 ftst_groups
+                  ftst_vars6 ftst_types ftst_types2 ftst_types3 ftst_groups \
+                  ftst_path ftst_rengrps
 TESTS += ftst_vars ftst_vars2 ftst_vars3 ftst_vars4 ftst_vars5	\
-         ftst_vars6 ftst_types ftst_types2 ftst_types3 ftst_groups
+         ftst_vars6 ftst_types ftst_types2 ftst_types3 ftst_groups \
+         ftst_path ftst_rengrps
 
 if BUILD_F03
 ftst_types_SOURCES = ftst_types.F f03lib_f_interfaces.f90 f03lib.c handle_err.F
@@ -60,6 +62,8 @@ ftst_vars4_SOURCES = ftst_vars4.F f03lib_f_interfaces.f90 f03lib.c handle_err.F
 ftst_vars5_SOURCES = ftst_vars5.F f03lib_f_interfaces.f90 f03lib.c handle_err.F
 ftst_vars6_SOURCES = ftst_vars6.F f03lib_f_interfaces.f90 f03lib.c handle_err.F
 ftst_groups_SOURCES = ftst_groups.F f03lib_f_interfaces.f90 f03lib.c handle_err.F
+ftst_path_SOURCES = ftst_path.F f03lib_f_interfaces.f90 f03lib.c handle_err.F
+ftst_rengrps_SOURCES = ftst_rengrps.F f03lib_f_interfaces.f90 f03lib.c handle_err.F
 else !BUILD_F03
 ftst_types_SOURCES = ftst_types.F fortlib.c handle_err.F
 ftst_types2_SOURCES = ftst_types2.F fortlib.c handle_err.F
@@ -71,16 +75,18 @@ ftst_vars4_SOURCES = ftst_vars4.F fortlib.c handle_err.F
 ftst_vars5_SOURCES = ftst_vars5.F fortlib.c handle_err.F
 ftst_vars6_SOURCES = ftst_vars6.F fortlib.c handle_err.F
 ftst_groups_SOURCES = ftst_groups.F fortlib.c handle_err.F
+ftst_path_SOURCES = ftst_path.F fortlib.c handle_err.F
+ftst_rengrps_SOURCES = ftst_rengrps.F fortlib.c handle_err.F
 endif !BUILD_F03
 
 # Add these netCDF-4 f90 test programs.
 check_PROGRAMS += f90tst_vars tst_types tst_types2 f90tst_vars_vlen	\
                   tst_f90_nc4 f90tst_grps f90tst_fill f90tst_fill2 f90tst_vars3		\
-                  f90tst_vars4 f90tst_vars2
+                  f90tst_vars4 f90tst_vars2 f90tst_path f90tst_rengrps
 
 TESTS += f90tst_vars tst_types tst_types2 f90tst_vars_vlen tst_f90_nc4	\
          f90tst_grps f90tst_fill f90tst_fill2 f90tst_vars3 f90tst_vars4		\
-         f90tst_vars2
+         f90tst_vars2 f90tst_path f90tst_rengrps
 
 f90tst_vars_SOURCES = f90tst_vars.f90
 tst_types_SOURCES = tst_types.f90
@@ -88,6 +94,8 @@ tst_types2_SOURCES = tst_types2.f90
 tst_f90_nc4_SOURCES = tst_f90_nc4.f90
 f90tst_vars_vlen_SOURCES = f90tst_vars_vlen.f90
 f90tst_grps_SOURCES = f90tst_grps.f90
+f90tst_path_SOURCES = f90tst_path.f90
+f90tst_rengrps_SOURCES = f90tst_rengrps.f90
 f90tst_fill_SOURCES = f90tst_fill.f90
 f90tst_fill2_SOURCES = f90tst_fill2.f90
 f90tst_vars2_SOURCES = f90tst_vars2.f90
@@ -98,7 +106,7 @@ f90tst_vars4_SOURCES = f90tst_vars4.f90
 if BUILD_V2
 check_PROGRAMS += ftst_v2
 TESTS += ftst_v2
-ftst_v2_SOURCES = ftst_v2.F 
+ftst_v2_SOURCES = ftst_v2.F
 endif # BUILD_V2
 
 # This is the netCDF-4 F90 large file test.
@@ -146,8 +154,8 @@ check_PROGRAMS += ftest
 TESTS += ftest
 if BUILD_F03
 ftest_SOURCES = ftest.F f03lib.c
-else 
-ftest_SOURCES = ftest.F fortlib.c 
+else
+ftest_SOURCES = ftest.F fortlib.c
 endif
 endif # BUILD_V2
 
@@ -162,10 +170,10 @@ tst_f90_SOURCES = tst_f90.f90
 # test_get.F and test_put.f need to be distributed, so that the user
 # need not have m4. fills.nc is used by test program ftest.
 EXTRA_DIST = test_get.F test_put.F fills.cdl create_fills.sh	\
-             run_f90_par_test.sh run_f77_par_test.sh ref_fills.nc 
+             run_f90_par_test.sh run_f77_par_test.sh ref_fills.nc \
+			CMakeLists.txt
 
 # Cleaning up files created during the process.
-CLEANFILES = scratch.nc test.nc copy.nc fills.nc tst_*.nc ftst_*.nc f90tst_*.nc
+CLEANFILES = scratch.nc test.nc copy.nc fills.nc tst_*.nc ftst_*.nc f90tst_*.nc temp.tmp
 
 MAINTAINERCLEANFILES = test_get.F test_put.F
-

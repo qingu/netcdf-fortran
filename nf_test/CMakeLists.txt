@@ -7,7 +7,7 @@ SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Process these files with m4.
 SET(m4_SOURCES test_get test_put)
-foreach (f ${m4_SOURCES})      
+foreach (f ${m4_SOURCES})
 		   GEN_m4(${f})
 endforeach(f)
 
@@ -35,7 +35,7 @@ if (USE_NETCDF4)
   # Add these netCDF-4 test programs.
   SET(nc4_check_PROGRAMS
     ftst_vars ftst_vars2 ftst_vars3 ftst_vars4 ftst_vars5
-    ftst_vars6 ftst_types ftst_types2 ftst_types3 ftst_groups)
+    ftst_vars6 ftst_types ftst_types2 ftst_types3 ftst_groups ftst_path ftst_rengrps)
   SET(check_PROGRAMS ${check_PROGRAMS} ${nc4_check_PROGRAMS})
   SET(TESTS ${TESTS} ${nc4_check_PROGRAMS})
 
@@ -50,6 +50,8 @@ if (USE_NETCDF4)
     SET(ftst_vars5_SOURCES ftst_vars5.F f03lib_f_interfaces.f90 f03lib.c handle_err.F)
     SET(ftst_vars6_SOURCES ftst_vars6.F f03lib_f_interfaces.f90 f03lib.c handle_err.F)
     SET(ftst_groups_SOURCES ftst_groups.F f03lib_f_interfaces.f90 f03lib.c handle_err.F)
+    SET(ftst_path_SOURCES ftst_path.F f03lib_f_interfaces.f90 f03lib.c handle_err.F)
+    SET(ftst_rengrps_SOURCES ftst_rengrps.F f03lib_f_interfaces.f90 f03lib.c handle_err.F)
   else()
     SET(ftst_types_SOURCES ftst_types.F fortlib.c handle_err.F)
     SET(ftst_types2_SOURCES ftst_types2.F fortlib.c handle_err.F)
@@ -61,6 +63,8 @@ if (USE_NETCDF4)
     SET(ftst_vars5_SOURCES ftst_vars5.F fortlib.c handle_err.F)
     SET(ftst_vars6_SOURCES ftst_vars6.F fortlib.c handle_err.F)
     SET(ftst_groups_SOURCES ftst_groups.F fortlib.c handle_err.F)
+    SET(ftst_path_SOURCES ftst_path.F fortlib.c handle_err.F)
+    SET(ftst_rengrps_SOURCES ftst_rengrps.F fortlib.c handle_err.F)
   endif(BUILD_F03)
   # Add these netCDF-4 f90 test programs.
   SET(nc4_f90_PROGRAMS
@@ -109,21 +113,25 @@ if (USE_NETCDF4)
   IF (TEST_PARALLEL)
     SET(check_PROGRAMS ${check_PROGRAMS} f90tst_parallel f90tst_parallel2 f90tst_parallel3
       f90tst_nc4_par)
-    #f90tst_parallel_fill
-    SET(TESTS ${TESTS} run_f90_par_test.sh)
-    SET(f90tst_parallel_SOURCES f90tst_parallel.f90)
-    SET(f90tst_parallel2_SOURCES f90tst_parallel2.f90)
-    SET(f90tst_parallel3_SOURCES f90tst_parallel3.f90)
-    SET(f90tst_nc4_par_SOURCES f90tst_nc4_par.f90)
+
+    build_bin_test(f90tst_parallel ".f90")
+    build_bin_test(f90tst_parallel2 ".f90")
+    build_bin_test(f90tst_parallel3 ".f90")
+    build_bin_test(f90tst_nc4_par ".f90")
+
     #SET(f90tst_parallel_fill_SOURCES f90tst_parallel_fill.f90)
+
   ENDIF (TEST_PARALLEL)
 
   # Test parallel I/O for F77.
   IF (TEST_PARALLEL)
     SET(check_PROGRAMS ${check_PROGRAMS} ftst_parallel ftst_parallel_nasa)
-    SET(TESTS ${TESTS} run_f77_par_test.sh)
-    SET(ftst_parallel_SOURCES ftst_parallel.F)
-    SET(ftst_parallel_nasa_SOURCES ftst_parallel_nasa.F)
+    SET(SCRIPT_TESTS ${SCRIPT_TESTS} run_f77_par_test)
+
+    # Add executables for f77_par_tst
+    build_bin_test(ftst_parallel ".F")
+    build_bin_test(ftst_parallel_nasa ".F")
+
   ENDIF (TEST_PARALLEL)
 
 endif(USE_NETCDF4)
@@ -135,7 +143,7 @@ IF (BUILD_V2)
   SET(TESTS ${TESTS} ftest)
   IF (BUILD_F03)
     SET(ftest_SOURCES ftest.F f03lib.c)
-  ELSE() 
+  ELSE()
     SET(ftest_SOURCES ftest.F fortlib.c)
   ENDIF(BUILD_F03)
 ENDIF(BUILD_V2)
@@ -151,20 +159,34 @@ IF(NOT NETCDF_C_LIBRARY)
 ENDIF()
 
 # Need a copy of ref_fills.nc for ftest
-execute_process(COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/ref_fills.nc 
+execute_process(COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/ref_fills.nc
   ${CMAKE_CURRENT_BINARY_DIR}/fills.nc)
 
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/fortran ${CMAKE_SOURCE_DIR}/libsrc 
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/fortran ${CMAKE_SOURCE_DIR}/libsrc
   ${CMAKE_SOURCE_DIR} ${CMAKE_CPP_FLAGS}
   ${NETCDF_C_INCLUDE_DIR} ${NC4F_BINARY_DIR}/fortran
   ${NC4F_BINARY_DIR}/libsrc)
-LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/fortran ${CMAKE_SOURCE_DIR}/libsrc 
+LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/fortran ${CMAKE_SOURCE_DIR}/libsrc
   ${NC4F_BINARY_DIR}/fortran)
+
+# Create pre-compiled tests.
 FOREACH(t ${TESTS})
   ADD_EXECUTABLE(${t} ${${t}_SOURCES})
-  TARGET_LINK_LIBRARIES(${t} ncfortran netcdff ${NETCDF_C_LIBRARY})
+  TARGET_LINK_LIBRARIES(${t} netcdff)
   ADD_TEST(${t} ${t})
 ENDFOREACH()
+
+# Copy test scripts in to current directory.
+FILE(GLOB COPY_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.sh)
+FILE(COPY ${COPY_FILES}
+	  DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/
+	  FILE_PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE)
+
+# Add script-based tests.
+FOREACH(t ${SCRIPT_TESTS})
+  add_sh_test(nf_test ${t})
+ENDFOREACH()
+
 
 # test_get.F and test_put.f need to be distributed, so that the user
 # need not have m4. fills.nc is used by test program ftest.

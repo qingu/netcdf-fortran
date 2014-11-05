@@ -7,7 +7,6 @@
 !             Mississippi State University
 !             rweed@cavs.msstate.edu
 
-
 ! License (and other Lawyer Language)
  
 ! This software is released under the Apache 2.0 Open Source License. The
@@ -15,14 +14,17 @@
 !
 !   http:www.apache.org/licenses/LICENSE-2.0.html
 !
-! The author grants to UCAR the right to revise and extend the software
+! The author grants to the University Corporation for Atmospheric Research
+! (UCAR), Boulder, CO, USA the right to revise and extend the software
 ! without restriction. However, the author retains all copyrights and
-! intellectual property rights explicit or implied by the Apache license
+! intellectual property rights explicitly stated in or implied by the
+! Apache license
 
 ! Version 1.: Sept. 2005 - Initial Cray X1 version
 ! Version 2.: May   2006 - Updated to support g95
 ! Version 3.: April 2009 - Updated for netCDF 4.0.1
 ! Version 4.: April 2010 - Updated for netCDF 4.1.1
+! Version 5.: May   2014 - Ensure return error status checked from C API calls          
          
 !-------------------------------- nf_inq_att ---------------------------------
  Function nf_inq_att(ncid, varid, name, xtype, nlen) RESULT(status)
@@ -54,9 +56,10 @@
 
  cstatus = nc_inq_att(cncid, cvarid, cname(1:ie+1), cxtype, cnlen)
 
- xtype = cxtype
- nlen  = cnlen
-
+ If (cstatus == NC_NOERR) Then
+    xtype = cxtype
+    nlen  = cnlen
+ EndIf
  status = cstatus
 
  End Function nf_inq_att
@@ -89,8 +92,9 @@
 
  cstatus = nc_inq_atttype(cncid, cvarid, cname(1:ie+1), cxtype)
 
- xtype = cxtype
-
+ If (cstatus == NC_NOERR) Then
+    xtype = cxtype
+ EndIf
  status = cstatus
 
  End Function nf_inq_atttype
@@ -123,8 +127,9 @@
 
  cstatus = nc_inq_attlen(cncid, cvarid, cname(1:ie+1), cnlen)
 
- nlen = cnlen
-
+ If (cstatus == NC_NOERR) Then
+    nlen = cnlen
+ EndIf
  status = cstatus
 
  End Function nf_inq_attlen
@@ -156,8 +161,9 @@
 
  cstatus = nc_inq_attid(cncid, cvarid, cname(1:ie+1), cattnum)
  
- attnum = cattnum + 1 ! add 1 to get FORTRAN att id
-
+ If (cstatus == NC_NOERR) Then
+    attnum = cattnum + 1 ! add 1 to get FORTRAN att id
+ EndIf
  status = cstatus
 
  End Function nf_inq_attid
@@ -188,11 +194,12 @@
 
  cstatus = nc_inq_attname(cncid, cvarid, cattnum, tmpname)
 
-! Strip of any C null characters and load only the part
-! of tmpname that will fit in name
+ If (cstatus == NC_NOERR) Then
+    ! Strip of any C null characters and load only the part
+    ! of tmpname that will fit in name
 
- name = stripCNullChar(tmpname, nlen)
-
+    name = stripCNullChar(tmpname, nlen)
+ EndIf
  status = cstatus
 
  End Function nf_inq_attname

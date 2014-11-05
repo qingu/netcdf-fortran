@@ -1,1 +1,5 @@
+CTestConfig.cmake
 build
+\#.\#
+*.*~
+html
